@@ -13,31 +13,32 @@ public class VisitRepository : IVisitRepository
         _connectionString = configuration.GetConnectionString("DefaultConnection");
     }
 
-    public async Task<VisitDTO> GetVisitById(int id, CancellationToken cancellationToken)
+    public async Task<DTO> GetVisitById(int id, CancellationToken cancellationToken)
     {
-        var visit = new VisitResponseDTO();
-        visit.products = new List<VisitDTO>();
+        var visit = new DTO();
+        // var visit = new VisitResponseDTO();
+        visit = new DTO();
         await using (var connection = new SqlConnection(_connectionString))
         {
             await connection.OpenAsync(cancellationToken);
 
-            var query = @"SELECT 
-                        [dbo].[Delivery].[date],
-                        [dbo].[Customer].[first_name],
-                        [dbo].[Customer].[last_name],
-                        [dbo].[Customer].[date_of_birth],
-                        [dbo].[Driver].[first_name] AS [firstname],
-                        [dbo].[Driver].[last_name] AS [lastname],
-                        [dbo].[Driver].[licence_number],
-                        [dbo].[Product].[name],
-                        [dbo].[Product].[price],
-                        [dbo].[Product_Delivery].[amount]
-                        FROM [dbo].[Delivery]
-                        Inner Join [dbo].[Customer] On [dbo].[Customer].[customer_id] = [dbo].[Delivery].[customer_id]
-                        Inner Join [dbo].[Driver] On [dbo].[Driver].[driver_id] = [dbo].[Delivery].[driver_id]
-                        Inner Join [dbo].[Product_Delivery] On [dbo].[Product_Delivery].[delivery_id] = [dbo].[Delivery].[delivery_id]
-                        Inner Join [dbo].[Product] On Product_Delivery.product_id = Product.product_id
-                        WHERE [dbo].[Delivery].[delivery_id] = @id";
+            var query = @"SELECT
+                        [dbo].[Visit].[date],
+                        [dbo].[Client].[first_name],
+                        [dbo].[Client].[last_name],
+                        [dbo].[Client].[date_of_birth],
+                        [dbo].[Mechanic].[first_name] AS [firstname],
+                        [dbo].[Mechanic].[last_name] AS [lastname],
+                        [dbo].[Mechanic].[licence_number],
+                        [dbo].[Service].[name],
+                        [dbo].[Service].[base_fee]
+--                         [dbo].[Visit_Service].[amount]
+                        FROM [dbo].[Visit]
+                        Inner Join [dbo].[Client] On [dbo].[Client].[client_id] = [dbo].[Visit].[client_id]
+                        Inner Join [dbo].[Mechanic] On [dbo].[Mechanic].[mechanic_id] = [dbo].[Visit].[mechanic_id]
+                        Inner Join [dbo].[Visit_Service] On [dbo].[Visit_Service].[visit_id] = [dbo].[Visit].[visit_id]
+                        Inner Join [dbo].[Service] On Visit_Service.service_id = Service.service_id
+--                         WHERE [dbo].[Visit].[visit_id] = @id";
 
             await using (var command = new SqlCommand(query, connection))
             {
@@ -47,25 +48,24 @@ public class VisitRepository : IVisitRepository
                 {
                     while (await reader.ReadAsync(cancellationToken))
                     {
-                        visit = new ClientResponseDTO()
+                        visit = new DTO()
                         {
-                            firstName = reader.GetString(reader.GetOrdinal("first_name")),
-                            lastName = reader.GetString(reader.GetOrdinal("last_name")),
-                            dateOfBirth = reader.GetDateTime(reader.GetOrdinal("date_of_birth")),
+                            date = reader.GetDateTime(0),
+                            // name = reader.GetString(reader.GetOrdinal("first_name")),
+                            // serviceFee = reader.GetFloat(reader.GetOrdinal("service_fee")),
                         };
-                        visit = new VisitResponseDTO()
+                        visit.client = new Client()
                         {
-                            firstName = reader.GetString(reader.GetOrdinal("firstname")),
-                            lastName = reader.GetString(reader.GetOrdinal("lastname")),
-                            licenceNumber = reader.GetString(reader.GetOrdinal("licence_number")),
+                            customer_id = reader.GetInt32(reader.GetOrdinal("customer_id")),
+                            firstName = reader.GetString(reader.GetOrdinal("name")),
                         };
-                        var product = new ProductDTO()
+                        var service = new VisitServiceDTO()
                         {
                             name = reader.GetString(reader.GetOrdinal("name")),
-                            price = reader.GetDecimal(reader.GetOrdinal("price")),
-                            amount = reader.GetInt32(reader.GetOrdinal("amount")),
+                            serviceFee = reader.GetFloat(reader.GetOrdinal("price")),
+                            // visitId = reader.GetInt32(reader.GetOrdinal("visit_id")),
                         };
-                        visit.products.Add(product);
+                        visit.visitServices.Add(service);
                         visit.date = reader.GetDateTime(reader.GetOrdinal("date_of_birth"));
                     }
                 }
@@ -173,6 +173,8 @@ public class VisitRepository : IVisitRepository
             }
         }
     }
+
+    
 
     // public async Task<Product> GetProductByProductName(string productName, CancellationToken cancellationToken)
     // {

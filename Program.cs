@@ -12,7 +12,7 @@ public class Program
 
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
-        // builder.Services.AddSwaggerGen();
+        builder.Services.AddSwaggerGen();
         
         builder.Services.AddScoped<IVisitRepository, VisitRepository>();
         builder.Services.AddScoped<IVisitService, VisitService>();
@@ -23,8 +23,8 @@ public class Program
 
         if (app.Environment.IsDevelopment())
         {
-            // app.UseSwagger();
-            // app.UseSwaggerUI();
+            app.UseSwagger();
+            app.UseSwaggerUI();
         }
 
         app.UseHttpsRedirection();

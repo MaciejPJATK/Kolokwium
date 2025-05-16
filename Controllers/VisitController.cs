@@ -23,10 +23,4 @@ public class VisitController: ControllerBase
         var response = await _visitService.GetVisitById(id, cancellationToken);
         return Ok(response);
     }
-
-    [HttpPost]
-    public async Task<IActionResult> AddDeliveryAsync([FromBody] DeliveryDTORequest dtoRequest, CancellationToken cancellationToken)
-    {
-        var productId = await _visitService.AddNewDelivery(dtoRequest, cancellationToken);
-        return Created($"/api/deliveries", new { ProductID = dtoRequest.deliveryId});    }
 }

@@ -13,7 +13,7 @@ public class VisitService: IVisitService
         _visitRepository = visitRepository;
     }
 
-    public async Task<VisitDTO> GetVisitById(int id, CancellationToken cancellationToken)
+    public async Task<DTO> GetVisitById(int id, CancellationToken cancellationToken)
     {
         if(id<0)
             throw new BadRequestException("id musi byc wieksze niz 0");
